@@ -1,0 +1,6 @@
+This project includes:
+- a light version of EPOS 0.8 (www.bio.inf.uni-jena.de/epos) 
+- code developped by the JDesktop Community
+both of them being covered by the LGPL.
+
+This light version of EPOS has been compiled by Patrick G. Durand on September 2008 to be used with BlastViewer.

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- $Id: build.xml,v 1.1.1.1 2008/09/01 07:25:26 patrick Exp $ -->
+
+<!-- ============================================================= -->
+<project name="EPOS_le" default="help" basedir=".">
+
+	<property environment="env"/>
+
+	<property name="compile.optimize" value="on" />
+	<property name="compile.debug" value="off" />
+	<property name="compile.deprecation" value="off" />
+
+	<property file="version.properties"/>
+
+	<property name="src" value="${basedir}/src" />
+	<property name="jar" value="${basedir}/jar" />
+	<property name="lib" value="${basedir}/lib" />
+	<property name="distrib" value="${basedir}/distrib" />
+
+	<property name="Dsrc" value="${distrib}/src" />
+	<property name="Dbin" value="${distrib}/bin" />
+	<property name="Dlib" value="${distrib}/lib" />
+
+	<property name="libjar" value="${Dbin}/${lib.name}-${lib.version}.jar"/>
+	<property name="rootpkg" value="epos"/>
+
+	<path id="distribClass.path">
+		<fileset dir="${Dbin}">
+			<include name="**/*.jar"/>
+		</fileset>
+		<pathelement location="${Dlib}"/>
+	</path>
+
+
+	<!-- ============================================================= -->
+	<target name="help">
+		<echo>This is the Ant's project file to manage EPOS Light Edition Library.</echo>
+		<echo/>
+		<echo>  makedistrib: compile and make release JAR of Epos LE.</echo>
+	</target>
+
+	<!-- ============================================================= -->
+	<target name="prepare">
+		<!-- Prepare the distrib directory tree -->
+		<delete dir="${Dsrc}"/>
+		<delete dir="${Dbin}"/>
+		<delete dir="${Dlib}"/>
+		<mkdir dir="${Dsrc}"/>
+		<mkdir dir="${Dbin}"/>
+		<mkdir dir="${Dlib}"/>
+	</target>
+
+	<!-- ============================================================= -->
+	<target name="copySrcDevel">
+		<echo>*** copySrcDevel ***</echo>
+		<copy todir="${Dsrc}">
+			<fileset dir="${src}">
+				<include name="**/*.java"/>
+				<include name="**/*.store"/>
+				<include name="**/*.properties"/>
+				<exclude name="**/*Test.java"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- ============================================================= -->
+	<target name="cleanEposDepJar">
+		<!-- Get some EPOS application code-->
+		<unjar src="${jar}/epos.jar" dest="${Dlib}"/>
+		<delete dir="${Dlib}/bsh" />
+		<delete dir="${Dlib}/com" />
+		<delete dir="${Dlib}/de" />
+		<delete dir="${Dlib}/epos/util" />
+		<delete dir="${Dlib}/epos/resources" />
+		<delete file="${Dlib}/epos/Epos.class" />
+		<delete dir="${Dlib}/org/java" />
+		<delete dir="${Dlib}/org/objectweb" />
+		<delete dir="${Dlib}/org/apache" />
+		<delete dir="${Dlib}/META-INF" />
+		<delete file="${Dlib}/log4j.properties" />
+		<!-- Get KD library code-->
+		<unjar src="${jar}/kd.jar" dest="${Dlib}"/>
+		<delete dir="${Dlib}/META-INF" />
+	</target>
+
+	<!-- ============================================================= -->
+	<target name="makedistrib" depends="prepare">
+		<!-- Copy all necessary jar files (third party librairies) -->
+		<copy todir="${Dbin}">
+			<fileset dir="${jar}">
+				<exclude name="cvs/**" />
+				<exclude name="*.txt" />
+			</fileset>
+		</copy>
+
+		<!-- Copy Java source code files that make the distribution -->
+		<antcall target="copySrcDevel"/>
+
+		<!-- Compile source code ready for distribution-->
+		<javac srcdir="${Dsrc}"
+          destdir="${Dlib}"
+	        classpathref="distribClass.path"
+          debug="${compile.debug}"
+          optimize="${compile.optimize}"
+          deprecation="${compile.deprecation}"
+          >
+		</javac>
+
+		<!-- Get some EPOS stuffs -->
+		<antcall target="cleanEposDepJar" />
+
+		<!-- Copy licenses -->
+		<copy file="${jar}/epos-license.txt" todir="${Dlib}"/>
+		<copy file="${jar}/jdic-license.txt" todir="${Dlib}"/>
+		<copy file="${jar}/notice.txt" todir="${Dlib}"/>
+
+		<!-- Make the Jar for the full application -->
+		<jar destfile="${libjar}">
+			<fileset dir="${Dlib}">
+				<include name="**/**"/>
+			</fileset>
+			<manifest>
+				<attribute name="Built-By" value="Patrick G. Durand"/>
+			</manifest>
+		</jar>
+		<delete file="${Dbin}/epos.jar" />
+		<delete file="${Dbin}/kd.jar" />
+		<delete dir="${Dsrc}" />
+		<delete dir="${Dlib}" />
+	</target>
+
+</project>
